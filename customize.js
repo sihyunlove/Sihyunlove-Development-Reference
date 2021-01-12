@@ -8,7 +8,7 @@ const config = {
   description: `SihyunLove's Development Reference`,     // Site description
   maxWidth: "768px",                  // Max width of website
   enableAbout: true,                  // Enables about page
-  siteUrl: `https://sihyunlove.netlify.app/`, // For sitemap & RSS feed
+  siteUrl: `https://sihyunlove-wiki.netlify.app/`, // For sitemap & RSS feed
   useScrollIndicator: true,           // Use scroll indicator on top of screen in posts
 
   /* Profile
