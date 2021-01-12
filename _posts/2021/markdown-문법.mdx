@@ -1,0 +1,147 @@
+---
+title: Markdown 문법 정리
+date: 2021-01-12
+tags: [Category, Gatsby]
+excerpt: markdown, gatsby
+---
+
+gatsby에서는 react가 섞여서 그런지 기존 markdown보다 훨씬 기능이 풍성해진 느낌이다. gatsby-blog-mdx 테마를 이용해서 본 블로그를 만들었는데 기존에 자주 사용하던 '*' 표시가 너무 못생겨서 sample post에 있던 내용을 정리해 본다.
+
+## tool 소개
+### git
+- svn과 같은 소스 버전 관리 tool이며 svn만 쓰는 회사에 다니다 보니 쓸 일이 없었습니다. 대세 기술을 사용하지 않으니 뒤쳐지는 기분이 들어 개인 프로젝트 관리용으로 사용하려 합니다. 
+
+### gitlab-ce
+- 제가 이해한 선에서는 git을 이용한 소스 버전 관리를 팀 단위로 협업할 수 있게 해줍니다. 이슈 트래커 기능도 가지고 있습니다. 비슷한 종류로는 github, gitlab(web) 등이 있으나 제약이 있어서 별도 서버를 구축할 수 있는 gitlab-ce를 이용합니다. 대단한 소스를 가지고 있는건 아니지만 개인적인 블로그 소스 및 회사 업무 내용이 포함될 수도 있기에 private을 선호합니다.  
+
+### sourcetree
+- git command를 사용하지 않아도 되는 git 시각화 도구입니다. 잘 외워지지도 않는 명령어 외워보려 고생 많았는데.. 이제 평생 sourcetree와 함께 하겠습니다.
+
+## 설치 방법
+### gitlab-ce 설치
+- docker를 이용하여 설치할 것입니다. 기본적으로 docker, docker-compose가 설치되어 있어야 합니다.
+1. docker-compose.yml 파일 수정
+
+``` yml
+version: '3' # specify docker-compose version
+
+services:
+web:
+    container_name : gitlab
+    image: 'gitlab/gitlab-ce:nightly'
+    restart: always
+    hostname: 'sihyunlove.duckdns.org'
+    ports:
+    - '20080:80'
+    - '20443:443'
+    - '20022:22'
+    volumes:
+    - '/external/gitlab/config:/etc/gitlab'
+    - '/external/gitlab/logs:/var/log/gitlab'
+    - '/external/gitlab/data:/var/opt/gitlab'
+
+```
+
+- 자신의 환경에 맞게 수정 후 아래의 명령어로 컨테이너를 실행합니다.
+
+``` shell
+    $ docker-compose up -d
+```
+
+2. postfix 설치
+- postfix는 simple mail server라고 이해하시면 좋을 것 같습니다.
+
+``` shell
+$ docker exec -it gitlab bash
+        
+$ apt update
+$ apt install postfix
+
+# 2. Internet Site 선택
+
+# 도메인 입력(sihyunlove.duckdns.org), 이후 ____@sihyunlove.duckdns.org 형식으로 이메일을 받게 됨
+
+```
+
+3. gitlab 설정 파일 편집
+- docker-compose.yml의 volumes:에서 설정한 config 폴더 아래에 있는 gitlab.rb 파일을 편집합니다.
+
+``` shell
+$ sudo vi /external/gitlab/config/gitlab.rb
+
+```
+
+- gitlab.rb에 다음의 내용을 추가 후 ssl_certificate, ssl_certificate_key에 입력한 경로에 인증서와 private key를 복사합니다. [GitLab Configuring Reference](https://docs.gitlab.com/omnibus/settings/README.html) 참조
+
+``` yml
+# 서버 주소 설정
+external_url 'https://sihyunlove.duckdns.org'
+
+# smtp 설정
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = "smtp.zoho.com"
+gitlab_rails['smtp_port'] = 587
+gitlab_rails['smtp_authentication'] = "plain"
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['smtp_user_name'] = "sihyunlove@zohomail.com"
+gitlab_rails['smtp_password'] = "ZOapple#26"
+gitlab_rails['smtp_domain'] = "smtp.zoho.com"
+gitlab_rails['gitlab_email_from'] = 'sihyunlove@zohomail.com'
+gitlab_rails['gitlab_email_reply_to'] = 'sihyunlove@zohomail.com'
+
+# nginx ssl certificate 설정
+nginx['enable'] = true
+nginx['client_max_body_size'] = '250m'
+nginx['redirect_http_to_https'] = false
+nginx['redirect_http_to_https_port'] = 80
+nginx['ssl_certificate'] = "/etc/gitlab/ssl/sihyunlove.crt"
+nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/sihyunlove.key"
+        
+```
+
+- 아래의 명령어로 변경 내용을 적용합니다.
+
+``` shell
+$ gitlab-ctl reconfigure
+
+```
+        
+### gitlab web 설정
+#### 관리자 Password 설정
+- 설정한 주소로 접속합니다. 정상적으로 설정되었다면 최초 연결시 관리자 password 설정 화면이 표시됩니다. 설정 후 로그인합니다. (관리자 ID는 root입니다.)
+#### 관리자 ID 변경
+- Settings - Account - Change username에서 변경 후 Update username 클릭
+#### E-Mail 변경 및 인증
+- Settings - Profile에서 변경 후 인증 메일 클릭하면 인증이 완료됩니다. 
+#### ssh key 등록 
+- Settings - SSH Keys
+
+### sourcetree 설치
+1. [Sourcetree 공식 홈페이지](https://www.sourcetreeapp.com/)에서 설치 프로그램을 다운 받는다. 
+2. 기억이 안나네... 머 암튼 간단하다. clone에서 주소 넣으면 끝
+
+
+## git clone 시 ssl 인증서 관련 오류가 발생할 경우
+
+### ca 인증서가 등록되어 있는지 확인
+
+```cmd
+$ git config --global http.sslCAInfo
+
+```
+
+### 해결 방법
+- 아무 내용도 표시되어 있지 않다면 ca.crt를 추가해 주거나 ssl verify를 하지 않게 설정한다.
+
+#### ca 인증서 정보 추가
+
+```cmd
+$ git config --global http.sslCAInfo /bin/curl-ca-bundle.crt
+
+```
+
+#### disable ssl verify 
+```cmd
+$ git config --global http.sslVerify false
+    
+```
