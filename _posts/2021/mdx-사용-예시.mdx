@@ -1,0 +1,110 @@
+---
+title: mdx 사용 예시
+date: 2021-01-12
+tags: [Category, Gatsby]
+excerpt: mdx, gatsby
+---
+
+mdx에서 사용 가능한 문법들을 정리해 본다. react를 학습하며 할 수 있는 일이 늘어나면 이 곳의 내용도 점점 더 채워질 것이다.
+
+---
+
+## Underline
+
+```mdx
+나는 <U>권시현</U>을 <U>사랑</U>합니다!
+
+```
+
+실제 표현
+
+나는 <U>권시현</U>을 <U>사랑</U>합니다!
+
+---
+
+## React Live Editor
+react 코드를 바로 실행할 수 있는 기능이다. '```jsx react-live'로 코드 블럭을 감싸면 된다.
+```jsx react-live
+const handleClick = () => { alert("Hello!") }
+render(<button onClick={handleClick}>Click</button>)
+
+```
+
+---
+
+<!-- Collapsable Component -->
+
+<Collapsable title="Expand Me" titleSize="2rem">
+
+🥰
+
+</Collapsable>
+
+---
+
+## Warning
+
+경고 메시지를 표시한다. 첫 줄에 링크를 입력하면 깨짐...
+```mdx
+<Warning>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Warning>
+
+```
+
+실제 표현
+<Warning padding={"1rem"}>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Warning>
+
+---
+
+## Primary
+
+<Primary padding={"1rem"}>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Primary>
+
+---
+
+## Success
+
+<Success padding={"1rem"}>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Success>
+
+---
+
+## Info
+
+<Info padding={"1rem"}>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Info>
+
+---
+
+## Danger
+
+<Danger padding={"1rem"}>
+Gatsby 테마는
+
+[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+
+</Danger>
+
+---
