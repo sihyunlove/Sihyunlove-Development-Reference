@@ -66,8 +66,6 @@ end
 
 ## dns 추가
 
-// highlight-start'부터 '// highlight-end'
-
 ```yaml:title=/etc/netplan/50-vagrant.yaml
 ---
 network:
@@ -77,10 +75,10 @@ network:
     enp0s8:
       addresses:
       - 10.10.0.135/24
-// highlight-start'
+// highlight-start
       nameservers:
         addresses: [1.1.1.1]
-// highlight-end'
+// highlight-end
 
 ```
 
@@ -118,6 +116,7 @@ $ gatsby build // or npm run build
 ## nginx 설정 수정
 
 ```shell:title=/etc/nginx/sites-available/default
+
 server {
         listen 80;       
         root /root/gatsby-gitbook-starter/public;
@@ -130,6 +129,8 @@ server {
                 try_files $uri $uri/ =404;
         }
 }
+
+```
 
 ## 접속 확인
 브라우저에서 'your_vm_ip'로 접근하여 접속 확인
