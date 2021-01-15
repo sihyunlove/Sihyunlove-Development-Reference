@@ -1,134 +1,142 @@
 ---
-title: Gatsby 블로그 만들기(1)
+title: Gatsby 블로그 개발 환경 구축(1)
 date: 2021-01-15
-tags: [Category, Gatsby 블로그 만들기]
+tags: [Category, Gatsby]
 excerpt: mdx, gatsby
 ---
 
-mdx에서 사용 가능한 문법들을 정리해 본다. react를 학습하며 할 수 있는 일이 늘어나면 이 곳의 내용도 점점 더 채워질 것이다.
+정적 블로그에 대한 관심이 많아지고 갈아타기도 몇번 하고 결국 gatsby로 결정하기까지 참 힘들었다. 웹, JAVA 개발 경력이 전무해서 모든 것이 생소하지만 뒤쳐지지 않기 위한 작은 발버둥이다. 
+
+간단하게 gatsby 블로그 만들기에 대한 맛은 본 상태고 본격적인 개발을 위해 환경 구축에 대해 정리할 예정이다. 
+
+목표는 다음과 같다.
+
+- dockerized gatsby build server
+- dockerized nginx server
+
+gatsby build server에서는 host에서 넘겨받은 gatsby source를 빌드해서 binary를 host에 전달해 준다.
+nginx server에서는 gatsby를 설치하지 않고 빌드된 gatsby binary를 호스팅한다. 
+wiki의 경우 netlify를 이용하여 호스팅할 예정이지만 테스트 서버 용도로 nginx server를 활용할 예정이고 포트폴리오 같이 공개하고 싶은 마음이 없는 것들은 nginx server에서 호스팅 할 것이다. 
+쥐뿔도 모르는 상태에서 목표는 일단 나름 거창하게 잡았고.. 먼저 ubuntu vm에서 nginx와 gatsby를 설치하는 것부터 시작할 것이다.
 
 ---
 
-## Underline
+# ubuntu vm 준비
+windows에서 docker 설치했다가 virtualbox가 안돌아가는 등 삽질의 경험이 있어서 깔끔하게 vm으로 테스트하기로 결정했다.
+vagrant로 간단하게 준비 끝!
 
-```mdx
-나는 <U>권시현</U>을 <U>사랑</U>합니다!
+```Vagrantfile
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+vagrant_AIP_version = "2"
+
+vagrant_machine_name1 = "ubuntu-20.04-64bit"
+
+Vagrant.configure(vagrant_AIP_version) do |config|
+  config.vm.define(vagrant_machine_name1) do |cfg|
+	cfg.vm.box = "ubuntu/focal64"
+	cfg.vm.provider:virtualbox do |vb|
+	  vb.name = (vagrant_machine_name1)
+	  vb.customize ["modifyvm", :id, "--cpus", 2]
+	  vb.customize ["modifyvm", :id, "--memory", 2048]
+	end
+	  
+	cfg.vm.host_name = (vagrant_machine_name1)
+    cfg.vm.synced_folder ".", "/vagrant", disabled: true
+	cfg.vm.network "public_network", ip: "yoru_vm_ip"
+	
+	cfg.vm.provision "shell", inline: <<-SHELL
+	  sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+	  service ssh restart
+    SHELL
+  end
+
+end
 
 ```
-
-실제 표현
-
-나는 <U>권시현</U>을 <U>사랑</U>합니다!
-
----
-
-## React Live Editor
-react 코드를 바로 실행할 수 있는 기능이다. '```jsx react-live'로 코드 블럭을 감싸면 된다.
-```jsx react-live
-const handleClick = () => { alert("Hello!") }
-render(<button onClick={handleClick}>Click</button>)
-
-```
-
----
-
-## 펼치기/접기
-
-```mdx
-<Collapsable title="Expand Me" titleSize="2rem">
-
-안녕하세요,
-
-hello
-
-</Collapsable>
-
-```
-
-실제 표현
-<Collapsable title="Expand Me" titleSize="2rem">
-
-안녕하세요,
-
-hello
-
-```mdx
-<Collapsable title="Expand Me" titleSize="2rem">
-
-안녕하세요,
-
-hello
-
-</Collapsable>
-
-```
-</Collapsable>
-
----
-
-## Warning
-
-경고 메시지를 표시한다. 첫 줄에 링크를 입력하면 깨짐...
-```mdx
-<Warning>
-Gatsby 테마는
-
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
-
-</Warning>
-
-```
-
-실제 표현
-<Warning padding={"1rem"}>
-Gatsby 테마는
-
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
-
-</Warning>
-
----
-
-## Primary
-
-<Primary padding={"1rem"}>
-Gatsby 테마는
-
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
-
-</Primary>
-
----
-
-## Success
-
-<Success padding={"1rem"}>
-Gatsby 테마는
-
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
-
-</Success>
-
----
-
-## Info
 
 <Info padding={"1rem"}>
-Gatsby 테마는
+참고로 ubuntu20에서 네트워크 설정 방법이 달라졌다. 기존 /etc/network/interface에서 /etc/netplan 아래의 yaml을 수정하는 것으로 변경됨.
 
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+수정 후 적용은 'netplan apply'이다.
 
-</Info>
+</Info> 
+
+## dns 추가
+
+// highlight-start'부터 '// highlight-end'
+
+```yaml:title=/etc/netplan/50-vagrant.yaml
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 10.10.0.135/24
+// highlight-start'
+      nameservers:
+        addresses: [1.1.1.1]
+// highlight-end'
+
+```
 
 ---
 
-## Danger
+# Node.js, nginx, gatsby 설치
 
-<Danger padding={"1rem"}>
-Gatsby 테마는
+```shell
+$ apt-get -y update
+$ apt-get -y upgrade
+$ apt-get -y dist-upgrade
 
-[여기](https://www.gatsbyjs.com/starters/?v=2)에서 다운 받으세요.
+$ curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 
-</Danger>
+$ apt-get -y update
+$ apt-get install -y nodejs nginx
+$ npm install npm@latest -g
+$ npm install -g gatsby
+
+```
+
+# nginx 접속 테스트
+브라우져에서 'http://your_vm_ip:8000'으로 접근하여 접속 확인
+
+# gatsby 연결 테스트
+## gatsby 블로그 생성 및 빌드
+
+```shell
+$ gatsby new blog
+$ cd blog
+$ gatsby build // or npm run build
+
+```
+
+## nginx 설정 수정
+
+```shell:title=/etc/nginx/sites-available/default
+server {
+        listen 80;       
+        root /root/gatsby-gitbook-starter/public;
+
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name your_site_name;
+
+        location / {              
+                try_files $uri $uri/ =404;
+        }
+}
+
+## 접속 확인
+브라우저에서 'your_vm_ip'로 접근하여 접속 확인
 
 ---
+
+# 정리
+
+이번 포스트에서는 vm 환경에서 gatsby를 nginx를 이용하여 호스팅하는 방법에 대해 정리했다. 
+다음 포스트에서는 ubuntu를 docker로 구동하여 gatsby binary를 host와 공유하는 방법에 대해 정리할 예정이다.
