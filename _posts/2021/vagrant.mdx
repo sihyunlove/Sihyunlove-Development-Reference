@@ -1,0 +1,149 @@
+---
+title: VAGRANT 사용법
+date: 2021-01-15
+tags: [VirtualBox]
+excerpt: VAGRANT, VirtualBox
+---
+
+vagrant는 OS 이미지(virtualbox, vmware)를 쉽게 만들 수 있도록 해주는 tool입니다. 만들어진 OS 이미지가 객체라면 Vagrantfile은 클래스라고 생각하면 됩니다. 대세인 yml과 연동하여 설정할 수 있는 ansible 확장 프로그램은 나중에 알아보도록 하고 일단 알고 있는 선에서 사용법에 대해 정리하고자 합니다.
+
+## 초 간단 사용법
+1. [Vagrant 공식 홈페이지](https://www.vagrantup.com/downloads.html "Downloads | Vagrant by HashiCorp")에서 설치 파일을 다운 받은 후 설치합니다.
+2. [Vagrant Cloud](https://app.vagrantup.com/boxes/search "Discover Vagrant Boxes - Vagrant Cloud")에서 설치할 vagrant box를 검색합니다.
+* vagrant box는 가공을 마친 포장된 이미지라고 생각하시면 됩니다. box를 내려받아서 구동하거나 vagrant 파일을 수정 후 이미지를 생성 후에 새로운 box로 포장할 수도 있습니다. 'vagrant box', 'vagrant cloud' 류의 명령어들이 이에 해당되며 본문에서 다루지 않습니다. 
+3. 임의의 폴더를 생성한 후 cmd에서 'vagrant init'을 실행합니다.
+
+```cmd
+$ vagrant init
+
+# 또는 init 시 box 명을 직접 입력할 수도 있습니다.
+$ vagrant init centos/7
+
+```
+4. Vagrantfile을 편집기로 열어서 box명을 입력해 줍니다.(3에서 box명을 입력했다면 생략하시면 됩니다.)
+
+```Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+end
+
+```
+5. cmd에서 'vagrant up' 명령을 실행합니다. 실행이 끝나면 background로 이미지가 실행되고 있으며 VirtualBox에서도 확인할 수 있습니다.
+
+```cmd
+$ vagrant up
+
+```
+ 
+## 자주 쓰는 명령어
+### init
+* Vagrant 파일을 생성합니다.
+* Command: vagrant init [name [url]]
+
+```cmd
+$ vagrant init
+
+# 또는 init 시 box 명을 직접 입력할 수도 있습니다.
+$ vagrant init centos/7
+
+```
+
+### up
+* Vagrant 파일을 이용하여 이미지를 생성합니다.
+* Command: vagrant up [name|id]
+
+```cmd
+# 하나의 Vagrant 파일에 여러 개의 이미지를 정의할 경우 'vagrant up' 시 정의된 전체 box를 구동합니다.
+$ vagrant up
+
+# 하나의 Vagrant 파일에 여러 개의 이미지를 정의할 경우 'vagrant up' 시 box명을 적어주면 해당 box만 구동합니다.
+$ vagrant up centos/7
+
+```
+
+### halt
+* 구동 중인 이미지를 정지합니다. (가상이미지 실행 종료)
+* Command: vagrant halt [name|id]
+
+### destroy
+* 생성된 이미지를 제거합니다. (실행 중일 경우에도 강제로 정지 후 삭제를 진행합니다.)
+* Command: vagrant destroy [name|id]
+
+### ssh
+* ssh로 접속합니다.(따로 설정할 필요 없이 간단하게 접속할 수 있습니다.)
+* Command: vagrant ssh [name|id] [-- extra_ssh_args]
+
+### provision
+* 구동 중인 상태로 Vagrantfile 설정을 다시 로딩합니다. Vagrant 파일이나 Vagrant 파일에서 설정한 스크립트가 수정될 경우 유용합니다. provision을 사용하지 않는다면 destory, up 등의 절차를 반복해야 할 것입니다.
+* Command: vagrant provision [vm-name]
+
+## Vagrantfile 작성 예
+
+```Vagrantfile
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+vagrant_AIP_version = "2"
+
+# vagrant에서 변수 사용 가능
+vagrant_machine_name1 = "ubuntu-14.04-64bit"
+vagrant_machine_name2 = "ubuntu-16.04-64bit"
+
+Vagrant.configure(vagrant_AIP_version) do |config|
+  # vagrant에서 정의되는 이름
+  config.vm.define(vagrant_machine_name1) do |cfg| 
+    # vagrant에서 설치할 box명
+	cfg.vm.box = "ubuntu/trusty64" 
+	
+	# vagrant와 연계하여 작동할 Provider 지정
+	cfg.vm.provider:virtualbox do |vb| 
+	  # virtualbox에서 보여질 VM 이름
+	  vb.name = (vagrant_machine_name1)
+	  # virtualbox에서 설정할 VM CPU
+	  vb.customize ["modifyvm", :id, "--cpus", 2]
+	  # virtualbox에서 설정할 VM Memory
+	  vb.customize ["modifyvm", :id, "--memory", 2048]
+	  # true 시 UI 표시
+	  # vb.gui = true
+	end
+	  
+	# host에서 보여지는 이름(ex: vagrant ssh devkit_ubuntu_14.04_64bit)
+	cfg.vm.host_name = (vagrant_machine_name1)
+	 
+	# 공유 폴더 사용 안 함 
+    cfg.vm.synced_folder ".", "/vagrant", disabled: true	 
+    
+    # ssh 설정, OS별로 안되는 경우가 발생하여 하기와 같이 설정 후 스크립트로 수정한다.
+	cfg.ssh.username = 'vagrant'
+    cfg.ssh.password = 'vagrant'
+    cfg.ssh.insert_key = 'false'
+
+    # bridge 설정 시 OS별로 안되는 부분이 많아서 하기와 같이 설정하고 dns는 스크립트로 추가한다. ansible 확장 쓰면 깔끔하게 해결될 듯... 
+	cfg.vm.network "public_network", ip: "10.10.0.135"
+	
+	cfg.vm.provision "shell", inline: <<-SHELL
+	  sed -i 's/#VAGRANT-END/      gateway 10.10.0.1/g' /etc/network/interfaces      
+	  echo '      dns-nameservers 8.8.8.8' >> /etc/network/interfaces
+	  echo '#VAGRANT-END' >> /etc/network/interfaces
+	  service networking restart
+	  sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config    
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+	  service ssh restart	  
+	 
+    SHELL
+  
+	# VM의 기본설정 완료 후 Host의 "run_ubuntu.sh"파일을 VM으로 복사하여 Shell로 실행
+    cfg.vm.provision "shell", path: "run_ubuntu.sh"  	
+  end
+
+  config.vm.define(vagrant_machine_name2) do |cfg| 
+	cfg.vm.box = "ubuntu/xenial64" 
+	# 이하 생략 ...    
+  end
+end
+
+```
+
+## 정리
+위의 모든 내용은 [Vagrant 공식 도큐먼트](https://www.vagrantup.com/docs) 에 잘 설명되어 있습니다. 
+'vagrant up' 또는 'vagrant provision' 시 에러 메시지 없이 정상적으로 종료되는지 확인해야 합니다. 만약 4개의 이미지를 한꺼번에 만들고자 할 경우 중간에 에러가 발생하면 그 즉시 중단되어 이후의 작업은 진행되지 않습니다. 
