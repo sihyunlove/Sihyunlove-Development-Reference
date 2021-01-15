@@ -5,7 +5,7 @@ tags: [JAVA]
 excerpt: Java, JNI
 ---
 
-## DLL을 사용하기 위한 자바 코드 생성
+# DLL을 사용하기 위한 자바 코드 생성
 * 아래의 HelloWorld.java 코드와 같은 코드를 생성한다. 여기서 DLL 의 함수(메소드)는  native 메소드인 print(), view()  메소드이다.
 
 * HelloWorld.java
@@ -33,7 +33,7 @@ public class HelloWorld {
 
 ```
 
-## make header file
+# make header file
 * 컴파일한 com/mptrance/test/HelloWorld.class를 javah 를 이용하여 .h(헤더파일) 을 만들어 주어야 한다.
 
 ```shell
@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_com_mptrance_test_HelloWorld_view(JNIEnv *, jobjec
 
 ```
 
-## make jni cpp
+# make jni cpp
 * 위에서 생성한 jni header는 구현부가 없다. 따라서 작성을 해야 한다.
 * HellowWorld.cpp
 
@@ -88,8 +88,8 @@ JNIEXPORT void JNICALL Java_com_mptrance_test_HelloWorld_view (JNIEnv *env, jo
 
 ```
 
-## C/C++ 컴파일(dll 생성)
-### for Windows
+# C/C++ 컴파일(dll 생성)
+## for Windows
 * Visual Studio 명령 프롬프트에서 다음을 입력합니다.
 
 ```cmd
@@ -101,7 +101,7 @@ cl –GX / GR -I%JAVA_HOME%\include -I%JAVA_HOME%\include\win32 HelloWorld.c -LD
 
 ```
 
-### for UNIX
+## for UNIX
 
 ```cmd
 g++ -c –fPIC –I$JAVA_HOME/include –I$JAVA_HOME/include/linux HelloNative.cpp
@@ -112,7 +112,7 @@ CC –G –I$JAVA_HOME/include –I$JAVA_HOME/include/solaris HelloNative.cpp �
 
 ```
 
-## Package와 header file
+# Package와 header file
 * Java_com_mptrance_test_HelloWorld_view 는  Java 의 com.mptrance.test.HelloWorld.view() 메소드를 가리키는 것입니다.
 만약 앞에서의 헤더파일을 이용해 C/C++로 구현한 후 Java 의 HelloWorld 를 Package 구조가 다르게 작성하여 사용하게 되면 다음과 같은 에러가 발생 할 수 있다.
 

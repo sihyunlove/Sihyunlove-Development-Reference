@@ -7,7 +7,7 @@ excerpt: VAGRANT, VirtualBox
 
 VirtualBox를 CLI로 사용할 경우 VBoxManage.exe를 이용하면 됩니다. VBoxManage.exe는 보통 C:\Program Files\Oracle\VirtualBox 아래에 위치합니다.
 
-## 자주쓰는 명령어
+# 자주쓰는 명령어
 ### VBoxManage startvm
 * VBoxManage startvm <uuid|vmname> [--type gui|sdl|headless|separate] [-E|--putenv <NAME>[=<VALUE>]]
 
@@ -17,7 +17,7 @@ $ VBoxManage startvm 'ubuntu16.04' --type headless &
 
 ```
 
-### VBoxManage controlvm
+## VBoxManage controlvm
 * VBoxManage controlvm <uuid|vmname> pause|resume|reset|poweroff|savestate|acpipowerbutton|acpisleepbutton|
 
 ```cmd
@@ -26,8 +26,8 @@ $ VBoxManage controlvm 'ubuntu16.04' poweroff
 
 ```
 
-## VirtualBox 사용 중 에러 상황 정리
-### UUID 충돌
+# VirtualBox 사용 중 에러 상황 정리
+## UUID 충돌
 새로운 vm을 생성할 때 기존 생성된 이미지와 UUID가 겹쳐서 충돌날 경우 해결 방법입니다.
 
 ```cmd
