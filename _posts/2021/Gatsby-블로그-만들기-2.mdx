@@ -77,7 +77,7 @@ vscode의 ssh로 작업할까도 생각해봤으나 git도 잘모르고 sourcetr
 ```shell:title:run.sh
 #!/bin/bash
 
-cd ./Sihyunlove-Development-Reference
+cd your_gatsby_site_path
 
 git pull -q
 
@@ -86,8 +86,9 @@ cd ../
 docker rm --force gatsby_build_server
 
 docker run --name gatsby_build_server \
-  -v /home/sihyunlove/docker/gatsby/Sihyunlove-Development-Reference:/gatsby \
+  -v your_gatsby_site_path:/gatsby \
   gatsby_build_server
+
 
 ```
 
@@ -105,5 +106,78 @@ gatsby 빌드가 안될 경우 빌드되던 환경에서 **node_modules** 폴더
 
 dockerized gatsby build server에서 빌드된 바이너리를 호스팅만 해주면 되니 간단할 예정이다 ㅋ
 
+## make Dockerfile
+[docker hub](https://hub.docker.com/)에서 만들어진 gatsby image를 다운받아 사용하려 했으나 갖은 삽질 끝에 그냥 ubuntu 기반으로 해서 Dockerfile로 작성하기로 함.
+참고로 각자 테마에 맞게 Dockerfile을 수정해야 하며 내가 사용하는 [gatsby-blog-mdx 테마](https://www.gatsbyjs.com/starters/EllisMin/gatsby-blog-mdx/)를 빌드하기 위한 설정이다.
+
+```Dockerfile
+FROM      nginx:latest
+
+LABEL maintainer="sihyunlove@zohomail.com"
+
+VOLUME "/gatsby"
+
+COPY gatsby.conf /etc/nginx/conf.d/
+
+RUN mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default
+
+RUN service nginx restart
 
 
+```
+
+## make docker-compose.yml 
+
+```yml:title=docker-compose.yml 
+version: '3'
+
+services:
+  nginx:
+    container_name: gatsby_test
+    image: nginx_for_gatsby_test:latest
+    ports:
+      - 'your_http_external_port:80'
+      - 'your_https_external_port:443'
+    volumes:
+      - 'your_gatsby_site_path:/gatsby'
+    restart: always
+
+```
+
+## make image
+
+```shell:title=build.sh
+#!/bin/bash
+
+docker build -t nginx_for_gatsby_test .
+
+```
+
+## make container
+
+```shell:title run.sh
+
+#!/bin/bash
+
+docker rm --force gatsby_test
+
+docker-compose up -d
+
+```
+
+# 마무리
+홈 경로에서 최종 스크립트를 구동하면 git pull 후 빌드한 바이너리를 뱉어내고 이를 nginx test server에 자동으로 deploy하는 구조이다.
+
+```shell:title:gatsby_build.sh
+
+#!/bin/bash
+
+cd your_gatsby_docker_path/
+./run.sh
+
+cd your_nginx_docker_path/
+./run.sh
+
+```
+
+이게 가장 효율적인가 하는 생각도 많이 들고 docker-compose를 좀 더 능숙하게 다룬다면 이 모습은 아닐것 같다만 아무튼 현 상황에선 최선을 다했음.. 그럼 뿅!
