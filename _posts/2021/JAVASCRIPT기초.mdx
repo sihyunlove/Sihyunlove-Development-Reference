@@ -1,0 +1,317 @@
+---
+title: 모던 JavaScript 튜토리얼 - 자바스크립트 기본
+date: 2021-01-22
+tags: [JAVA SCRIPT]
+excerpt: JAVA SCRIPT
+---
+
+javascript를 공부해야겠다 마음먹고 검색 중 꽤 괜찮은 사이트를 찾았다. [모던 JavaScript 튜토리얼](ko.javascript.info)를 보면서 필요하다 싶은 내용들에 대해 기록할 것이다.
+
+참고로 나는 C/C++ 베이스에 C#, java도 어느정도 할 줄 아는데 javascript도 문법이 거의 비슷하다.
+
+---
+
+# warming up
+```html
+<!DOCTYPE HTML>
+<html>
+
+<body>
+
+  <p>스크립트 전</p>
+
+  <script>
+    alert( 'Hello, world!' );
+  </script>
+
+  <p>스크립트 후</p>
+
+</body>
+
+</html>
+
+```
+
+위의 코드에서 <script>와 </script>의 사이에 들어간 내용이 자바스크립트이다.
+
+스크립트의 양이 늘어날 경우 별도의 파일로 만들고 참조를 넣어서 실행할 수 있다.
+아래는 외부 스크립트를 선언할 수 있는 방법이다.
+
+```html
+<!--절대 경로-->
+<script src="/path/to/script.js"></script>
+
+<!--절대 경로-->
+<script src="script.js"></script>
+
+<!--URL-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/script.js"></script>
+
+```
+
+스크립트를 별도의 파일로 분리하면 브라우저가 스크립트를 다운 받아 캐쉬에 저장하기 때문에 성능상의 이점이 있다고 한다.
+
+script는 src 속성과 내부 코드를 동시에 가질 수 없다.
+
+아래 코드는 실행되지 않는다. 
+
+```html
+<script src="file.js">
+  alert(1); // src 속성이 사용되었으므로 이 코드는 무시됩니다.
+</script>
+
+```
+
+아래와 같이 분리하면 사용 가능하다.
+
+```html
+<script src="file.js"></script>
+<script>
+  alert(1);
+</script>
+
+```
+
+자바스크립트 내의 코드는 c/c++처럼 ;로 끝난다. 주석도 마찬가지로 /*, */, //이다.
+
+# 변수와 상수
+## 변수
+let을 이용하여 변수를 선언한다.
+
+```js
+let message;             // 변수 선언
+
+message = 'hello';       // 대입
+
+let message2 = 'hello';   // 초기화
+
+alert(message);
+
+```
+
+var로 선언할 수도 있으나 오래된 방식이라고 하네.. 자세한건 모르겠고 무튼 let을 쓰자.
+
+## 상수 
+const 키워드 붙이면 된다.
+
+# 자료형
+변수에 들어오는 데이터에 따라 자료형에 결정되는 동적 타입이다.
+
+```js
+let val;
+
+val = 'apople'; // 문자열
+val = 100;      // 정수형
+
+```
+
+## 숫자형
+### Infinity
+0을 나눌 경우 발생
+
+```js
+alert(1/0);
+
+```
+
+### NaN
+계산 중 에러
+
+```js
+alert("야호"/3);
+
+```
+
+## BigInt
+내부 표현 방식 때문에 자바스크립트에선 (253-1)(9007199254740991) 보다 큰 값 혹은 -(253-1) 보다 작은 정수는 '숫자형’을 사용해 나타낼 수 없다.
+
+```js
+// 끝에 'n'이 붙으면 BigInt형 자료입니다.
+const bigInt = 1234567890123456789012345678901234567890n;
+
+```
+
+## string
+javascript에서는 "와 '는 동일한 의미이다. c언어에서 %d, %s와 같이 변수의 값을 문자열에 삽입하려면 문자열을 `로 감싼 후 ${변수명 or 표현식}을 넣어주면 된다. 
+```js
+let str = "Hello";
+let str2 = 'Single quotes are ok too';
+let phrase = `can embed another ${str}`;
+
+```
+
+## boolean
+
+```js
+let isGreater = 4 > 1;
+
+alert( isGreater ); // true (비교 결과: "yes")
+
+```
+
+## null
+nothing, empty, unknown
+
+```js
+let val = null;
+
+```
+
+## undefined
+할당되지 않은 상태
+
+```js
+let val;
+
+alert(val); // 'undefined'가 출력됩니다.
+
+// val = undefined; 이렇게 명시적으로 넣을 수도 있다.
+
+```
+
+## typeof
+
+```js
+typeof undefined // "undefined"
+
+typeof 0 // "number"
+
+typeof 10n // "bigint"
+
+typeof true // "boolean"
+
+typeof "foo" // "string"
+
+typeof Symbol("id") // "symbol"
+
+typeof Math // "object"  (1)
+
+typeof null // "object"  (2)
+
+typeof alert // "function"  (3)
+
+```
+
+# alert, prompt, confirm을 이용한 상호작용
+## alert
+일반적인 MessageBox다.
+
+```js
+alert("hello");
+
+```
+
+## prompt
+사용자 입력을 받는다. 사용자가 입력을 취소할 경우 null 값을 반환한다.
+
+```js
+result = prompt(title, [default]); // title: 사용자에게 보여줄 문자열, default 초기값
+
+```
+
+## confirm
+사용자 입력을 true/false로 받는다. 사용자가 입력을 취소할 경우 null 값을 반환한다.
+
+```js
+result = confirm("로그인하시겠습니까?"); // title: 사용자에게 보여줄 문자열, default 초기값
+
+```
+
+# type casting
+## String
+
+```js
+let value = true;
+alert(typeof value); // boolean
+
+value = String(value); // 변수 value엔 문자열 "true"가 저장됩니다.
+alert(typeof value); // string
+
+```
+
+## number
+
+```js
+let str = "123";
+alert(typeof str); // string
+
+let num = Number(str); // 문자열 "123"이 숫자 123으로 변환됩니다.
+
+alert(typeof num); // number
+
+```
+
+## boolean
+
+```js
+alert( Boolean(1) ); // 숫자 1(true)
+alert( Boolean(0) ); // 숫자 0(false)
+
+alert( Boolean("hello") ); // 문자열(true)
+alert( Boolean("") ); // 빈 문자열(false)
+
+```
+
+# 반복문
+## for
+다른 건 특별한게 없는데 goto 비슷한 것을 break로 사용할 수 있네. goto 처럼 어느위치에서나 사용할 수 있는 건 아니고 반복문 안에서만 유효하다.
+
+```js
+outer: for (let i = 0; i < 3; i++) {
+
+  for (let j = 0; j < 3; j++) {
+
+    let input = prompt(`(${i},${j})의 값`, '');
+
+    // 사용자가 아무것도 입력하지 않거나 Cancel 버튼을 누르면 두 반복문 모두를 빠져나옵니다.
+    if (!input) break outer; // (*)
+
+    // 입력받은 값을 가지고 무언가를 함
+  }
+}
+alert('완료!');
+
+```
+# function
+default parameter도 지원하는데 특이한 점은 default 값으로 function을 호출하여 리턴 값으로 설정 가능
+
+## 일반적인 형태의 함수 선언
+
+```js
+function hello() {
+    alert("hello");
+}
+
+```
+
+## 익명 함수
+
+```js
+let func=function() {
+    alert("hello");
+}
+
+```
+
+## arrow functino
+
+```js
+
+let func = () => alert("hello");
+
+## callback function
+
+```js
+
+function foo(res, a, b) {
+        if(res == "orange")
+          a();
+        else
+          b();
+    }
+
+    foo(prompt("what do you like?"),
+    () => alert("good"),
+    () => alert("bad"));
+
+```
