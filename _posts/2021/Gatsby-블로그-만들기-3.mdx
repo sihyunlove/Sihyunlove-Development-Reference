@@ -1,0 +1,57 @@
+---
+title: Gatsby 블로그 개발 환경 구축(3)
+date: 2021-01-19
+tags: [Gatsby]
+excerpt: Gatsby, nginx
+---
+
+원래하고자 했던 작업은 지난 번에 했지만 몇가지 문제점이 있다. 
+첫번째로는 원래 가지고 있던 소스를 빌드 후 배포는 가능하나 'gatsby new' 명령을 이용하여 새로운 블로그 테마를 적용하려 할 경우 결국은 다른 어딘가에 node.js, gatsby를 설치해야 한다는 것이다. 
+애초에 목표가 docker에서만 빌드를 하고 기타 시스템에서는 편집만해서 시스템 오염을 최소화하려는 건데 이러면 처음과 달라지게 된다. 
+일단 위의 문제를 해결하기 위해서는 [atsby 블로그 개발 환경 구축(2)](https://sihyunlove-wiki.netlify.app/2021/Gatsby-%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%A7%8C%EB%93%A4%EA%B8%B0-2/)에서 구성했던 gatsby build 서버를 약간만 수정하면 된다.
+
+이번 포스트에서는 'gatsby_new'를 할 수 있는 docker를 만들고 최종적으로는 input을 받아서 유동적으로 작업할 수 있게 구조개선을 진행할 것이다. 다만 후자는 최근 react 공부를 못하고 있어서 책한권 보고나서 진행할 예정이다.
+
+---
+
+# dockerized gatsby build server for 'gatsby new'
+
+Dockerfile의 경우 지난 번에 만든 gatsby build server와 동일하다.
+run.sh의 경우 volume 경로만 생성될 폴더로 지정해주면 된다. 전에는 볼륨으로 지정한 경로 자체가 gatsby 프로젝트였던 반면 지금은 'gatsby new' 시 하위에 새로운 폴더가 생성되는 것만 차이점이다.
+
+```shell:title=run.sh
+#!/bin/bash
+
+docker rm --force gatsby_build_server
+
+docker run -i -t --name gatsby_build_server \
+  -v your_host_path:/gatsby \
+  gatsby_build_server /bin/bash
+
+```
+
+<Warning padding={"1rem"}>
+위에서 언급했지만 your_host_path는 생성될 gatsby 프로젝트의 상위 폴더이다. 
+
+your_host_path/gatsby_project_name의 형태로 폴더가 생성될 것이다.
+
+</Warning> 
+
+docker-entrypoint.sh에서는 gatsby 프로젝트를 다운받고 빌드하는 역할을 한다.
+
+```shell:title=run.sh
+#!/bin/bash
+apt-get install git
+cd /gatsby
+
+gatsby new gatsby-simplefolio https://github.com/cobidev/gatsby-simplefolio
+
+cd gatsby-simplefolio
+
+gatsby build
+
+echo "========== build end =========="
+
+```
+
+실행 순서는 build.sh(변동 사항 없음) -> run.sh(변동 사항 없음)이다. 이렇게 하면 gatsby 소스 및 빌드된 바이너리가 호스트 경로에 나오게 되고 이를 nginx 등을 이용하여 배포하면 끝이다.
