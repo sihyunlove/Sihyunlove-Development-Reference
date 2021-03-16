@@ -1,0 +1,90 @@
+---
+title: Windows Batch Script
+date: 2021-03-16
+tags: [Windows Batch Script]
+excerpt: Windows Batch Script
+---
+
+Windows에서 사용하는 Batch 파일 문법에 대해 정리한다.
+batch 파일이란 .bat, .cmd와 같은 파일들을 말하며 bat에서는 %ERRORLEVEL%이 오류에 대해서만 사용할 수 있어서 .cmd를 사용하는 것을 권장한다.
+
+---
+
+# Comment
+주석은 :: 혹은 REM을 사용한다. for문 안에서와 같이 특수한 케이스에서만 REM을 사용하고 대부분은 ::로 쓰면 된다.
+
+# Variable
+## SET 키워드를 사용하여 변수를 선언한다. 초기화할 경우 변수명과 값 사이에 공백을 넣지 않아야 한다. 아래의 코드를 보면 'foo'라는 변수와 별개로 'foo '라는 변수가 생성됨을 볼 수 있다. 
+
+```cmd:title=test.cmd
+SET foo=bar
+SET foo = apple
+
+ECHO %foo%  
+ECHO %foo %
+
+```
+
+## 정수형 변수의 선언은 /A 옵션을 준다. 
+아래 코드에서 /A 옵션 설정을 하지 않을 경우 연산을 하지 않고 그대로 문자열로 인식한다.
+
+```cmd:title=test.cmd
+SET /A num1=4+2
+SET num2=4+2
+
+ECHO %num1%
+ECHO %num2%
+
+```
+
+## Command Line Argument
+순서대로 %0~%9로 접근 가능, 그 이상의 경우는 SHIFT 명령을 이용해서 접근해야 한다.
+
+```cmd:title=test.cmd
+:: test.cmd apple
+ ECHO %0
+SHIFT
+ECHO %0
+
+```
+
+다음과 같은 특수기호를 추가하여 사용할 수 있다. 일반 변수에는 안되더라..
+
+옵션 | 설명
+------ | ------
+~ | "" 제거
+f |  인자를 포함한 전체 경로
+s | 공백을 제거한 짧은 경로
+dp | 인자를 포함하지 않는 전체 경로
+n | 파일명
+x | .을 포함한 확장자
+nx | 파일명과 확장자
+
+```cmd:title=test.cmd
+:: test.cmd "C:\Program Files"
+:: test.cmd apple
+
+SET var1=%~fs1
+ECHO %var1%
+
+SET var2=%~dp1
+ECHO %var2%
+
+SET var3=%~nx1
+ECHO %var3%
+
+SET var4=%~n1
+ECHO %var4%
+
+SET var5=%~x1
+ECHO %var5%
+
+SET parent=%~fs0
+ECHO %parent%
+
+```
+
+## Return code
+기본적으로 마이크로소프트에서 만든 응용프로그램은 성공 시 0, 실패 시 0이 아닌 값을 반환한다. 또한 배치파일에서는 한 명령이 실행될 때마다 %ERRORLEVEL% 환경 변수의 값이 갱신되어 성공/실패를 확인할 수 있다.
+
+
