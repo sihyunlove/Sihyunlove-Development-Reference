@@ -16,7 +16,7 @@ batch 파일이란 .bat, .cmd와 같은 파일들을 말하며 bat에서는 %ERR
 # Variable
 ## SET 키워드를 사용하여 변수를 선언한다. 초기화할 경우 변수명과 값 사이에 공백을 넣지 않아야 한다. 아래의 코드를 보면 'foo'라는 변수와 별개로 'foo '라는 변수가 생성됨을 볼 수 있다. 
 
-```cmd:title=test.cmd
+```cmd
 SET foo=bar
 SET foo = apple
 
@@ -28,7 +28,7 @@ ECHO %foo %
 ## 정수형 변수의 선언은 /A 옵션을 준다. 
 아래 코드에서 /A 옵션 설정을 하지 않을 경우 연산을 하지 않고 그대로 문자열로 인식한다.
 
-```cmd:title=test.cmd
+```cmd
 SET /A num1=4+2
 SET num2=4+2
 
@@ -40,7 +40,7 @@ ECHO %num2%
 ## Command Line Argument
 순서대로 %0~%9로 접근 가능, 그 이상의 경우는 SHIFT 명령을 이용해서 접근해야 한다.
 
-```cmd:title=test.cmd
+```cmd
 :: test.cmd apple
  ECHO %0
 SHIFT
@@ -60,9 +60,11 @@ n | 파일명
 x | .을 포함한 확장자
 nx | 파일명과 확장자
 
-```cmd:title=test.cmd
+```cmd
+:: test case
 :: test.cmd "C:\Program Files"
-:: test.cmd apple
+:: test.cmd apple.txt
+:: test.cmd "D:\새 폴더\tt1\tt2\a.txt"
 
 SET var1=%~fs1
 ECHO %var1%
@@ -84,7 +86,30 @@ ECHO %parent%
 
 ```
 
-## Return code
-기본적으로 마이크로소프트에서 만든 응용프로그램은 성공 시 0, 실패 시 0이 아닌 값을 반환한다. 또한 배치파일에서는 한 명령이 실행될 때마다 %ERRORLEVEL% 환경 변수의 값이 갱신되어 성공/실패를 확인할 수 있다.
+## Return Code
+기본적으로 마이크로소프트에서 만든 응용프로그램은 성공 시 0, 실패 시 0이 아닌 값을 반환한다. 
+(따라서 우리가 만든 프로그램이나 함수의 경우도 이를 따르는 것이 스크립트 작성 시 유리하다.)
+또한 배치파일에서는 한 명령이 실행될 때마다 %ERRORLEVEL% 환경 변수의 값이 갱신되어 성공/실패를 확인할 수 있다.
 
+```cmd
+IF %ERRORLEVEL% NEQ 0 (
+  REM do something here to address the error
+)
 
+IF %ERRORLEVEL% EQU 9009 (
+  ECHO error - SomeFile.exe not found in your PATH
+)
+
+```
+
+### &&와 ||
+위에서 언급한 성공 시 0, 실패 시 0이 아닌 값을 반환한다는 룰을 따를 경우 &&, ||와 같은 연산자를 이용하여 리턴 값 처리를 할 수 있다.
+근데 이해가 안된다... 성공 시 0을 리턴하는데 0과 &&를 해서 true가 나올리가... 그냥 외우자.
+```cmd
+SomeCommand.exe && ECHO succeeded!
+
+SomeCommand.exe || ECHO failed with return code %ERRORLEVEL%
+
+SomeCommand.exe || EXIT /B 1
+
+```
